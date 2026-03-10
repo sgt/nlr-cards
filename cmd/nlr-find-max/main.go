@@ -12,11 +12,11 @@ type searchPair struct {
 	nonZeroId, zeroId int
 }
 
-func findSearchPair(baseId, factor int) (searchPair, error) {
+func findSearchPair(nlr *nlr_cards.NLR, baseId, factor int) (searchPair, error) {
 	nonZeroId := 1
 	current := baseId
 	for {
-		_, err := nlr_cards.Fetch(current, 1)
+		_, err := nlr.Fetch(current, 1)
 		if err != nil && !errors.Is(err, nlr_cards.ErrEmptyContent) {
 			return searchPair{0, 0}, err
 		}
@@ -30,13 +30,13 @@ func findSearchPair(baseId, factor int) (searchPair, error) {
 	}
 }
 
-func binarySearchNonZero(sp searchPair) (int, error) {
+func binarySearchNonZero(nlr *nlr_cards.NLR, sp searchPair) (int, error) {
 	nonZeroId := sp.nonZeroId
 	zeroId := sp.zeroId
 
 	for nonZeroId+1 < zeroId {
 		mid := (nonZeroId + zeroId) / 2
-		_, err := nlr_cards.Fetch(mid, 1)
+		_, err := nlr.Fetch(mid, 1)
 		if err != nil && !errors.Is(err, nlr_cards.ErrEmptyContent) {
 			return 0, err
 		}
@@ -52,12 +52,14 @@ func binarySearchNonZero(sp searchPair) (int, error) {
 
 func main() {
 
-	sp, err := findSearchPair(1000, 10)
+	nlr := nlr_cards.NewNLR()
+
+	sp, err := findSearchPair(&nlr, 1000, 10)
 	if err != nil {
 		panic(err)
 	}
 
-	lastNonZero, err := binarySearchNonZero(sp)
+	lastNonZero, err := binarySearchNonZero(&nlr, sp)
 	if err != nil {
 		panic(err)
 	}
