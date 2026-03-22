@@ -7,11 +7,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	nlr_cards "github.com/sgt/nlr-cards"
+	nlrcards "github.com/sgt/nlr-cards"
 )
 
 const (
-	maxId = 133781 // found by nlr-find-max
+	maxId = 133781 // found by nlr
 
 	// be courteous to the NLR server
 	pauseInterval = 1000 // pause after every such batch of files downloaded
@@ -28,7 +28,7 @@ var (
 
 func main() {
 
-	nlr := nlr_cards.NewNLR()
+	nlr := nlrcards.NewNLR()
 
 	// semaphore channel to limit concurrency
 	sem := make(chan struct{}, maxConcurrent)
