@@ -1,9 +1,11 @@
 package main
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
 
 	"github.com/alexflint/go-arg"
 	"github.com/alitto/pond/v2"
@@ -19,7 +21,9 @@ type dlCmd struct {
 }
 
 type countCmd struct {
-	JsonFile string `default:"cards.json"`
+	MaxId          int    `default:"133781" help:"Max ID to download cards for"`
+	MaxConcurrency int    `default:"20" help:"Max concurrent downloads"`
+	JsonFile       string `default:"cards.json"`
 }
 
 func main() {
@@ -38,7 +42,7 @@ func main() {
 			panic(err)
 		}
 	case args.Count != nil:
-		if err := countCards(args.Count.JsonFile); err != nil {
+		if err := countCards(args.Count); err != nil {
 			panic(err)
 		}
 	}
@@ -47,7 +51,7 @@ func main() {
 func downloadCards(options *dlCmd) error {
 	nlr := nlrcards.NewNLR()
 
-	cardCounts, err := nlrcards.ReadCardsJson(options.JsonFile)
+	cardCounts, err := nlrcards.ReadCardsJsonFile(options.JsonFile)
 	if err != nil {
 		return fmt.Errorf("Failed to read '%s', error: %w\n", options.JsonFile, err)
 	}
@@ -55,27 +59,68 @@ func downloadCards(options *dlCmd) error {
 	pool := pond.NewPool(options.MaxConcurrency)
 
 	for id, cardCount := range cardCounts {
-		pool.Submit(func() {
-		})
+		for cardNumber := 1; cardNumber <= cardCount; cardNumber++ {
+			pool.Submit(func() {
+				_, err := nlr.FetchAndSave(id, cardNumber)
+				if err != nil {
+					log.Printf("Failed to download card: %d/%d\n", id, cardNumber)
+				}
+			})
+		}
 	}
 
 	pool.StopAndWait()
 	return nil
 }
 
-func countCards(jsonFilename string) error {
+func countCards(options *countCmd) error {
+
 	nlr := nlrcards.NewNLR()
 
-	log.Println("Finding max non-zero ID...")
-
-	lastId, err := nlr.FindLastId()
-	if err != nil {
+	log.Printf("Updating missing cards in %s...\n", options.JsonFile)
+	cards, err := nlrcards.ReadCardsJsonFile(options.JsonFile)
+	if os.IsNotExist(err) {
+		cards = make(map[int]int)
+	} else if err != nil {
 		return err
 	}
 
-	log.Printf("Max non-zero ID: %d\n", lastId)
+	type resultPair = struct{ Id, LastCardNumber int }
+	resultsChan := make(chan resultPair, 1000)
+	defer close(resultsChan)
 
-	log.Printf("Updating missing cards in %s...\n", jsonFilename)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
-	return nil
+	go func() {
+		<-ctx.Done()
+		log.Println("Ctrl+C pressed, wait for the workers to finish...")
+	}()
+
+	pool := pond.NewPool(options.MaxConcurrency, pond.WithContext(ctx))
+
+	go func() {
+		for r := range resultsChan {
+			cards[r.Id] = r.LastCardNumber
+		}
+	}()
+
+	for id := 1; id <= options.MaxId; id++ {
+		_, ok := cards[id]
+		if !ok {
+			pool.Submit(func() {
+				lastCardNumber, err := nlr.FindLastCardNumber(id)
+				if err != nil {
+					log.Printf("Failed to determine last card number for id %d\n", id)
+					return
+				}
+				resultsChan <- resultPair{id, lastCardNumber}
+			})
+		}
+	}
+
+	pool.StopAndWait()
+
+	log.Println("Writing json...")
+	return nlrcards.WriteCardsJsonFile(options.JsonFile, cards)
 }

@@ -146,7 +146,7 @@ func (nlr *NLR) FindLastCardNumber(id int) (int, error) {
 	return binarySearchLastId(left, right, existsFn)
 }
 
-func ReadCardsJson(filename string) (map[int]int, error) {
+func ReadCardsJsonFile(filename string) (map[int]int, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func ReadCardsJson(filename string) (map[int]int, error) {
 	return cards, nil
 }
 
-func WriteCardsJson(filename string, cards map[int]int) error {
+func WriteCardsJsonFile(filename string, cards map[int]int) error {
 	jsonStr, err := json.Marshal(cards)
 	if err != nil {
 		return err

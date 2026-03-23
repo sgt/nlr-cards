@@ -1,14 +1,13 @@
 ext := if os() == "windows" { ".exe" } else { "" }
 
 build:
-    @go build -o bin/nlr-find-max-id{{ext}} ./cmd/nlr-find-max-id
-    @go build -o bin/nlr-dl{{ext}} ./cmd/nlr-dl
-
-run-find-max-id: build
-    bin/nlr-find-max-id{{ext}}
+    @go build -o bin/nlr{{ext}} ./cmd/nlr
 
 run-dl: build
-    bin/nlr-dl{{ext}}
+    bin/nlr{{ext}} dl
+
+run-count: build
+    bin/nlr{{ext}} count
 
 count-downloaded:
     find . -type f | wc -l
