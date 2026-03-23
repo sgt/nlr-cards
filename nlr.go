@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -18,9 +20,13 @@ const (
 	cardNumberMultFactor = 3
 )
 
+var lastCardNumberRegexp = regexp.MustCompile(`<meta name="Description" content=".*\( \d+/(\d+) \)">`)
+
 type NLR struct {
 	OutputDir string
-	baseUrl   string
+
+	basePngUrl  string
+	baseHtmlUrl string
 
 	client *http.Client
 }
@@ -29,15 +35,17 @@ func NewNLR() NLR {
 	return NLR{
 		OutputDir: "downloads",
 
-		baseUrl: "https://nlr.ru/e-case3/sc2.php/web_gak/gc",
-		client:  &http.Client{Timeout: 30 * time.Second},
+		basePngUrl:  "https://nlr.ru/e-case3/sc2.php/web_gak/gc",
+		baseHtmlUrl: "https://nlr.ru/e-case3/sc2.php/web_gak/lc",
+
+		client: &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
 // Fetching
 
-func (nlr *NLR) Fetch(id, cardNumber int) ([]byte, error) {
-	url := fmt.Sprintf("%s/%d/%d", nlr.baseUrl, id, cardNumber)
+func (nlr *NLR) fetchPng(id, cardNumber int) ([]byte, error) {
+	url := fmt.Sprintf("%s/%d/%d", nlr.basePngUrl, id, cardNumber)
 	if resp, err := nlr.client.Get(url); err != nil {
 		return nil, err
 	} else {
@@ -50,11 +58,33 @@ func (nlr *NLR) Fetch(id, cardNumber int) ([]byte, error) {
 	}
 }
 
-func (nlr *NLR) Exists(id, cardNumber int) (bool, error) {
-	if data, err := nlr.Fetch(id, cardNumber); err != nil {
+func (nlr *NLR) pngExists(id, cardNumber int) (bool, error) {
+	if data, err := nlr.fetchPng(id, cardNumber); err != nil {
 		return false, err
 	} else {
 		return len(data) != 0, nil
+	}
+}
+
+func (nlr *NLR) fetchHtml(id int) (html []byte, err error) {
+	url := fmt.Sprintf("%s/%d/1", nlr.baseHtmlUrl, id)
+	if resp, err := nlr.client.Get(url); err != nil {
+		return []byte{}, err
+	} else {
+		defer func() {
+			err = resp.Body.Close()
+		}()
+		bytes, err := io.ReadAll(resp.Body)
+		return bytes, err
+	}
+}
+
+func (nlr *NLR) htmlExists(id int) (bool, error) {
+	if data, err := nlr.fetchHtml(id); err != nil {
+		return false, err
+	} else {
+		html := string(data)
+		return strings.HasPrefix(html, "\nError"), nil
 	}
 }
 
@@ -80,7 +110,7 @@ func (nlr *NLR) save(id, cardNumber int, data []byte) (bool, error) {
 }
 
 func (nlr *NLR) FetchAndSave(id, cardNumber int) (bool, error) {
-	data, err := nlr.Fetch(id, cardNumber)
+	data, err := nlr.fetchPng(id, cardNumber)
 	if err != nil {
 		return false, err
 	}
@@ -125,7 +155,7 @@ func binarySearchLastId(left, right int, existsFn func(int) (bool, error)) (int,
 }
 
 func (nlr *NLR) FindLastId() (int, error) {
-	existsFn := func(id int) (bool, error) { return nlr.Exists(id, 1) }
+	existsFn := func(id int) (bool, error) { return nlr.pngExists(id, 1) }
 
 	left, right, err := findPairForMaxIdSearch(baseId, idMultFactor, existsFn)
 	if err != nil {
@@ -135,15 +165,23 @@ func (nlr *NLR) FindLastId() (int, error) {
 	return binarySearchLastId(left, right, existsFn)
 }
 
-func (nlr *NLR) FindLastCardNumber(id int) (int, error) {
-	existsFn := func(cardNumber int) (bool, error) { return nlr.Exists(id, cardNumber) }
+func (nlr *NLR) FindLastCardNumberInASillyWay(id int) (int, error) {
+	existsFn := func(cardNumber int) (bool, error) { return nlr.pngExists(id, cardNumber) }
 
 	left, right, err := findPairForMaxIdSearch(baseCardNumber, cardNumberMultFactor, existsFn)
 	if err != nil {
-		panic(err)
+		return -1, nil
 	}
 
 	return binarySearchLastId(left, right, existsFn)
+}
+
+func (nlr *NLR) FindLastCardNumberInASmartWay(id int) (int, error) {
+	data, err := nlr.fetchHtml(id)
+	if err != nil {
+		return -1, nil
+	}
+	lastCardNumberRegexp.Find(data)
 }
 
 func ReadCardsJsonFile(filename string) (map[int]int, error) {

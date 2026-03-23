@@ -109,7 +109,7 @@ func countCards(options *countCmd) error {
 		_, ok := cards[id]
 		if !ok {
 			pool.Submit(func() {
-				lastCardNumber, err := nlr.FindLastCardNumber(id)
+				lastCardNumber, err := nlr.FindLastCardNumberInASillyWay(id)
 				if err != nil {
 					log.Printf("Failed to determine last card number for id %d\n", id)
 					return
