@@ -12,4 +12,7 @@ run-count: build
 count-downloaded:
     find . -type f | wc -l
 
+top-10-ids:
+    jq "to_entries | sort_by(-.value) | from_entries" cards.json | head -11
+
 default: build
