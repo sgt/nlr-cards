@@ -28,7 +28,7 @@ function loadCard() {
     const cardNumber = getRandomCardNumber(id);
     const img = document.getElementById('card');
     img.src = `${BASE_URL}/${id}/${cardNumber}`;
-    img.alt = `Card ${id}`;
+    img.alt = `Card ${id}/${cardNumber}`;
 }
 
 document.getElementById('newCard').addEventListener('click', loadCard);
