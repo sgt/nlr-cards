@@ -25,13 +25,19 @@ function getRandomCardNumber(id) {
     return randomCN
 }
 
-function loadCard() {
-    currentId = getRandomId();
-    currentCardNumber = getRandomCardNumber(currentId);
+function loadCard(id, cardNumber) {
+    currentId = id;
+    currentCardNumber = cardNumber;
     const img = document.getElementById('card');
     img.src = `${BASE_URL}/${currentId}/${currentCardNumber}`;
     img.alt = `Card ${currentId}/${currentCardNumber}`;
     updateFavouriteButton();
+}
+
+function loadRandomCard() {
+    const id = getRandomId();
+    const cardNumber = getRandomCardNumber(id);
+    loadCard(id, cardNumber);
 }
 
 function getFavouriteKey(id, cardNumber) {
@@ -94,6 +100,10 @@ function showFavourites() {
         const [id, cardNumber] = parseFavouriteKey(key);
         const cardDiv = document.createElement('div');
         cardDiv.className = 'favCard';
+        cardDiv.onclick = () => {
+            hideFavourites();
+            loadCard(id, cardNumber);
+        };
 
         const img = document.createElement('img');
         img.src = `${BASE_URL}/${id}/${cardNumber}`;
@@ -120,7 +130,7 @@ function hideFavourites() {
     document.getElementById('favOverlay').style.display = 'none';
 }
 
-document.getElementById('newCard').addEventListener('click', loadCard);
+document.getElementById('newCard').addEventListener('click', (_) => { loadRandomCard(); });
 document.getElementById('favourite').addEventListener('click', toggleFavourite);
 document.getElementById('favLink').addEventListener('click', showFavourites);
 document.getElementById('favOverlay').addEventListener('click', (e) => {
@@ -133,5 +143,5 @@ document.getElementById('favClose').addEventListener('click', hideFavourites);
 (async () => {
     await loadCardsData();
     updateFavouriteCount();
-    loadCard();
+    loadRandomCard();
 })();
