@@ -83,6 +83,13 @@ function getFavouriteKeys() {
         .filter(key => key?.startsWith('fav_'));
 }
 
+/**
+ * sorted in reverse chronological order
+*/
+function getFavouriteKeysSorted() {
+    return getFavouriteKeys().sort((a, b) => localStorage.getItem(b) - localStorage.getItem(a));
+}
+
 function updateFavouriteCount() {
     const count = getFavouriteKeys().length;
     const elLink = document.getElementById('favLink');
@@ -97,7 +104,7 @@ function showFavourites() {
     const grid = document.getElementById('favGrid');
     grid.innerHTML = '';
 
-    for (const key of getFavouriteKeys()) {
+    for (const key of getFavouriteKeysSorted()) {
         const [id, cardNumber] = parseFavouriteKey(key);
         const cardDiv = document.createElement('div');
         cardDiv.className = 'favCard';
