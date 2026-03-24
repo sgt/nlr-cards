@@ -89,6 +89,7 @@ function updateFavouriteCount() {
     const elCount = document.getElementById('favCount');
     elCount.textContent = `${count}`;
     elLink.style.display = count > 0 ? 'block' : 'none';
+    console.log(`favs count updated to ${count}`);
 }
 
 function showFavourites() {
@@ -115,6 +116,7 @@ function showFavourites() {
         removeBtn.onclick = (e) => {
             e.stopPropagation();
             removeFavourite(id, cardNumber);
+            updateFavouriteCount();
             showFavourites();
         };
 
@@ -130,7 +132,7 @@ function hideFavourites() {
     document.getElementById('favOverlay').style.display = 'none';
 }
 
-document.getElementById('newCard').addEventListener('click', (_) => { loadRandomCard(); });
+document.getElementById('newCard').addEventListener('click', loadRandomCard);
 document.getElementById('favourite').addEventListener('click', toggleFavourite);
 document.getElementById('favLink').addEventListener('click', showFavourites);
 document.getElementById('favOverlay').addEventListener('click', (e) => {
