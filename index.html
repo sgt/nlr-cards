@@ -44,13 +44,21 @@
         button:hover {
             background: #555;
         }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="image-container">
         <img id="card" alt="Card">
     </div>
-    <button id="newCard">New Card</button>
+    <div class="buttons">
+        <button id="newCard">🔃</button>
+        <button id="favourite">🤍</button>
+    </div>
     <script src="index.js"></script>
 </body>
 </html>

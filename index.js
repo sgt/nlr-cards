@@ -3,6 +3,8 @@ const BASE_URL = 'https://nlr.ru/e-case3/sc2.php/web_gak/gc';
 const MAX_ID = 133781;
 
 let CARDS = {};
+let currentId = null;
+let currentCardNumber = null;
 
 async function loadCardsData() {
     const response = await fetch(CARDS_JSON);
@@ -24,14 +26,41 @@ function getRandomCardNumber(id) {
 }
 
 function loadCard() {
-    const id = getRandomId();
-    const cardNumber = getRandomCardNumber(id);
+    currentId = getRandomId();
+    currentCardNumber = getRandomCardNumber(currentId);
     const img = document.getElementById('card');
-    img.src = `${BASE_URL}/${id}/${cardNumber}`;
-    img.alt = `Card ${id}/${cardNumber}`;
+    img.src = `${BASE_URL}/${currentId}/${currentCardNumber}`;
+    img.alt = `Card ${currentId}/${currentCardNumber}`;
+    updateFavouriteButton();
+}
+
+function getFavouriteKey(id, cardNumber) {
+    return `fav_${id}_${cardNumber}`;
+}
+
+function isFavourited(id, cardNumber) {
+    return localStorage.getItem(getFavouriteKey(id, cardNumber)) !== null;
+}
+
+function toggleFavourite() {
+    const key = getFavouriteKey(currentId, currentCardNumber);
+    
+    if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+    } else {
+        localStorage.setItem(key, Date.now());
+    }
+    
+    updateFavouriteButton();
+}
+
+function updateFavouriteButton() {
+    const btn = document.getElementById('favourite');
+    btn.textContent = isFavourited(currentId, currentCardNumber) ? '🤍' : '❤️';
 }
 
 document.getElementById('newCard').addEventListener('click', loadCard);
+document.getElementById('favourite').addEventListener('click', toggleFavourite);
 
 (async () => {
     await loadCardsData();
