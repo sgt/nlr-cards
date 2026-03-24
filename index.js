@@ -38,21 +38,33 @@ function getFavouriteKey(id, cardNumber) {
     return `fav_${id}_${cardNumber}`;
 }
 
+function parseFavouriteKey(key) {
+    const parts = key.slice(4).split('_');
+    const id = parseInt(parts[0]);
+    const cardNumber = parseInt(parts[1]);
+    return [id, cardNumber];
+}
+
 function isFavourited(id, cardNumber) {
     return localStorage.getItem(getFavouriteKey(id, cardNumber)) !== null;
 }
 
 function toggleFavourite() {
     const key = getFavouriteKey(currentId, currentCardNumber);
-    
+
     if (localStorage.getItem(key)) {
         localStorage.removeItem(key);
     } else {
         localStorage.setItem(key, Date.now());
     }
-    
+
     updateFavouriteButton();
     updateFavouriteCount();
+}
+
+function removeFavourite(id, cardNumber) {
+    const key = getFavouriteKey(id, cardNumber);
+    localStorage.removeItem(key);
 }
 
 function updateFavouriteButton() {
@@ -60,27 +72,59 @@ function updateFavouriteButton() {
     btn.textContent = isFavourited(currentId, currentCardNumber) ? '❤️' : '🤍';
 }
 
-function getFavouriteCount() {
-   let count = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('fav_')) {
-            count++;
-        }
-    }
-    return count;
+function getFavouriteKeys() {
+    return Array.from({ length: localStorage.length }, (_, i) => localStorage.key(i))
+        .filter(key => key?.startsWith('fav_'));
 }
 
 function updateFavouriteCount() {
-    const count = getFavouriteCount();
+    const count = getFavouriteKeys().length;
     const elLink = document.getElementById('favLink');
     const elCount = document.getElementById('favCount');
     elCount.textContent = `${count}`;
     elLink.style.display = count > 0 ? 'block' : 'none';
 }
 
+function showFavourites() {
+    const overlay = document.getElementById('favOverlay');
+    const grid = document.getElementById('favGrid');
+    grid.innerHTML = '';
+
+    for (const key of getFavouriteKeys()) {
+        const [id, cardNumber] = parseFavouriteKey(key);
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'favCard';
+
+        const img = document.createElement('img');
+        img.src = `${BASE_URL}/${id}/${cardNumber}`;
+        img.alt = `Card ${id}/${cardNumber}`;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'favRemove';
+        removeBtn.textContent = '×';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeFavourite(id, cardNumber);
+            showFavourites();
+        };
+
+        cardDiv.appendChild(img);
+        cardDiv.appendChild(removeBtn);
+        grid.appendChild(cardDiv);
+    }
+
+    overlay.style.display = 'flex';
+}
+
+function hideFavourites() {
+    document.getElementById('favOverlay').style.display = 'none';
+}
+
 document.getElementById('newCard').addEventListener('click', loadCard);
 document.getElementById('favourite').addEventListener('click', toggleFavourite);
+document.getElementById('favLink').addEventListener('click', showFavourites);
+document.getElementById('favOverlay').addEventListener('click', hideFavourites);
+document.getElementById('favClose').addEventListener('click', hideFavourites);
 
 (async () => {
     await loadCardsData();
