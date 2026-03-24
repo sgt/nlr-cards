@@ -123,7 +123,11 @@ function hideFavourites() {
 document.getElementById('newCard').addEventListener('click', loadCard);
 document.getElementById('favourite').addEventListener('click', toggleFavourite);
 document.getElementById('favLink').addEventListener('click', showFavourites);
-document.getElementById('favOverlay').addEventListener('click', hideFavourites);
+document.getElementById('favOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('favOverlay')) {
+        hideFavourites();
+    }
+});
 document.getElementById('favClose').addEventListener('click', hideFavourites);
 
 (async () => {
