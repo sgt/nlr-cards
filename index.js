@@ -52,11 +52,31 @@ function toggleFavourite() {
     }
     
     updateFavouriteButton();
+    updateFavouriteCount();
 }
 
 function updateFavouriteButton() {
     const btn = document.getElementById('favourite');
-    btn.textContent = isFavourited(currentId, currentCardNumber) ? '🤍' : '❤️';
+    btn.textContent = isFavourited(currentId, currentCardNumber) ? '❤️' : '🤍';
+}
+
+function getFavouriteCount() {
+   let count = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('fav_')) {
+            count++;
+        }
+    }
+    return count;
+}
+
+function updateFavouriteCount() {
+    const count = getFavouriteCount();
+    const elLink = document.getElementById('favLink');
+    const elCount = document.getElementById('favCount');
+    elCount.textContent = `${count}`;
+    elLink.style.display = count > 0 ? 'block' : 'none';
 }
 
 document.getElementById('newCard').addEventListener('click', loadCard);
@@ -64,5 +84,6 @@ document.getElementById('favourite').addEventListener('click', toggleFavourite);
 
 (async () => {
     await loadCardsData();
+    updateFavouriteCount();
     loadCard();
 })();
