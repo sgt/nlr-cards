@@ -179,7 +179,7 @@ func (nlr *NLR) FindLastCardNumberInASillyWay(id int) (int, error) {
 func (nlr *NLR) FindLastCardNumberInASmartWay(id int) (int, error) {
 	data, err := nlr.fetchHtml(id)
 	if err != nil {
-		return -1, nil
+		return -1, err
 	}
 
 	matches := lastCardNumberRegexp.FindStringSubmatch(string(data))
