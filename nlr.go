@@ -2,6 +2,7 @@ package nlr_cards
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -74,8 +75,7 @@ func (nlr *NLR) fetchHtml(id int) (html []byte, err error) {
 		defer func() {
 			err = resp.Body.Close()
 		}()
-		bytes, err := io.ReadAll(resp.Body)
-		return bytes, err
+		return io.ReadAll(resp.Body)
 	}
 }
 
@@ -181,7 +181,12 @@ func (nlr *NLR) FindLastCardNumberInASmartWay(id int) (int, error) {
 	if err != nil {
 		return -1, nil
 	}
-	lastCardNumberRegexp.Find(data)
+
+	matches := lastCardNumberRegexp.FindStringSubmatch(string(data))
+	if len(matches) < 2 {
+		return -1, errors.New("match not found")
+	}
+	return strconv.Atoi(matches[1])
 }
 
 func ReadCardsJsonFile(filename string) (map[int]int, error) {

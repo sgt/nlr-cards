@@ -16,13 +16,13 @@ type dlCmd struct {
 	MaxId          int    `default:"133781" help:"Max ID to download cards for"`
 	PauseInterval  int    `default:"1000" help:"Pause after every such batch of files downloaded"`
 	PauseDuration  int    `default:"3" help:"Pause duration in seconds"`
-	MaxConcurrency int    `default:"20" help:"Max concurrent downloads"`
+	MaxConcurrency int    `default:"5" help:"Max concurrent downloads"`
 	JsonFile       string `default:"cards.json"`
 }
 
 type countCmd struct {
 	MaxId          int    `default:"133781" help:"Max ID to download cards for"`
-	MaxConcurrency int    `default:"20" help:"Max concurrent downloads"`
+	MaxConcurrency int    `default:"5" help:"Max concurrent downloads"`
 	JsonFile       string `default:"cards.json"`
 }
 
@@ -109,11 +109,12 @@ func countCards(options *countCmd) error {
 		_, ok := cards[id]
 		if !ok {
 			pool.Submit(func() {
-				lastCardNumber, err := nlr.FindLastCardNumberInASillyWay(id)
+				lastCardNumber, err := nlr.FindLastCardNumberInASmartWay(id)
 				if err != nil {
 					log.Printf("Failed to determine last card number for id %d\n", id)
 					return
 				}
+				log.Printf("Id %d has %d cards.\n", id, lastCardNumber)
 				resultsChan <- resultPair{id, lastCardNumber}
 			})
 		}

@@ -1,7 +1,10 @@
 ext := if os() == "windows" { ".exe" } else { "" }
 
+test:
+    go test ./...
+
 build:
-    @go build -o bin/nlr{{ext}} ./cmd/nlr
+    go build -o bin/nlr{{ext}} ./cmd/nlr
 
 run-dl: build
     bin/nlr{{ext}} dl
