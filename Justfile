@@ -18,4 +18,7 @@ count-downloaded:
 top-10-ids:
     jq "to_entries | sort_by(-.value) | from_entries" cards.json | head -11
 
+last-ids:
+    jq -r 'keys | map(tonumber) | sort | reverse' cards.json | head
+
 default: build

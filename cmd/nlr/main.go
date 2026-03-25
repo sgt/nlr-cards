@@ -22,7 +22,7 @@ type dlCmd struct {
 
 type countCmd struct {
 	MaxId          int    `default:"133781" help:"Max ID to download cards for"`
-	MaxConcurrency int    `default:"5" help:"Max concurrent downloads"`
+	MaxConcurrency int    `default:"2" help:"Max concurrent downloads"`
 	JsonFile       string `default:"cards.json"`
 }
 
