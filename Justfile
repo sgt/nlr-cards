@@ -21,4 +21,7 @@ top-10-ids:
 last-ids:
     jq -r 'keys | map(tonumber) | sort | reverse' cards.json | head
 
+total-cards:
+    jq '[.[]] | add' cards.json
+
 default: build

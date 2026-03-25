@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 )
 
 const (
@@ -33,13 +35,18 @@ type NLR struct {
 }
 
 func NewNLR() NLR {
+	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = nil
+	retryClient.RetryWaitMax = 5 * time.Second
+	retryClient.RetryMax = 2
+
 	return NLR{
 		OutputDir: "downloads",
 
 		basePngUrl:  "https://nlr.ru/e-case3/sc2.php/web_gak/gc",
 		baseHtmlUrl: "https://nlr.ru/e-case3/sc2.php/web_gak/lc",
 
-		client: &http.Client{Timeout: 30 * time.Second},
+		client: retryClient.StandardClient(),
 	}
 }
 
