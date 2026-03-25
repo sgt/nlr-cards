@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 
 	"github.com/alexflint/go-arg"
 	"github.com/alitto/pond/v2"
@@ -87,7 +88,6 @@ func countCards(options *countCmd) error {
 
 	type resultPair = struct{ Id, LastCardNumber int }
 	resultsChan := make(chan resultPair, 1000)
-	defer close(resultsChan)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
@@ -99,7 +99,11 @@ func countCards(options *countCmd) error {
 
 	pool := pond.NewPool(options.MaxConcurrency, pond.WithContext(ctx))
 
+	var cardsUpdateWG sync.WaitGroup
+	cardsUpdateWG.Add(1)
+
 	go func() {
+		defer cardsUpdateWG.Done()
 		for r := range resultsChan {
 			cards[r.Id] = r.LastCardNumber
 		}
@@ -121,6 +125,8 @@ func countCards(options *countCmd) error {
 	}
 
 	pool.StopAndWait()
+	close(resultsChan)
+	cardsUpdateWG.Wait()
 
 	log.Println("Writing json...")
 	return nlrcards.WriteCardsJsonFile(options.JsonFile, cards)
