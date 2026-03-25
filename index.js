@@ -15,7 +15,8 @@ async function loadCardsData() {
 }
 
 function getRandomId() {
-    return Math.floor(Math.random() * MAX_ID) + 1;
+    const rnd = Math.floor(Math.random() * MAX_ID) + 1;
+    return CARDS[rnd] === 0 ? getRandomId() : rnd;
 }
 
 function getRandomCardNumber(id) {
