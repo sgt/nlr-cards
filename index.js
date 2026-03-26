@@ -2,6 +2,16 @@ const CARDS_JSON = "cards.json";
 const BASE_URL = 'https://nlr.ru/e-case3/sc2.php/web_gak/gc';
 const MAX_ID = 133781;
 
+const elCard = document.getElementById('card');
+const elSpinner = document.getElementById('spinner');
+const elFavBtn = document.getElementById('favBtn');
+const elNewCardBtn = document.getElementById('newCardBtn');
+const elFavLink = document.getElementById('favLink');
+const elFavCount = document.getElementById('favCount');
+const elFavOverlay = document.getElementById('favOverlay');
+const elFavGrid = document.getElementById('favGrid');
+const elFavClose = document.getElementById('favClose');
+
 let CARDS = {};
 let currentId = null;
 let currentCardNumber = null;
@@ -44,12 +54,10 @@ function setupImageSpinner(img, spinner, failAlt) {
 function loadCard(id, cardNumber) {
     currentId = id;
     currentCardNumber = cardNumber;
-    const img = document.getElementById('card');
-    const spinner = document.getElementById('spinner');
 
-    img.src = `${BASE_URL}/${currentId}/${currentCardNumber}`;
-    img.alt = `Card ${currentId}/${currentCardNumber}`;
-    setupImageSpinner(img, spinner, `Failed to load card ${currentId}/${currentCardNumber}`);
+    elCard.src = `${BASE_URL}/${currentId}/${currentCardNumber}`;
+    elCard.alt = `Card ${currentId}/${currentCardNumber}`;
+    setupImageSpinner(elCard, elSpinner, `Failed to load card ${currentId}/${currentCardNumber}`);
     updateFavouriteButton();
 }
 
@@ -93,8 +101,7 @@ function removeFavourite(id, cardNumber) {
 }
 
 function updateFavouriteButton() {
-    const btn = document.getElementById('favourite');
-    btn.textContent = isFavourited(currentId, currentCardNumber) ? '❤️' : '🤍';
+    elFavBtn.textContent = isFavourited(currentId, currentCardNumber) ? '❤️' : '🤍';
 }
 
 function getFavouriteKeys() {
@@ -111,17 +118,13 @@ function getFavouriteKeysSorted() {
 
 function updateFavouriteCount() {
     const count = getFavouriteKeys().length;
-    const elLink = document.getElementById('favLink');
-    const elCount = document.getElementById('favCount');
-    elCount.textContent = `${count}`;
-    elLink.style.display = count > 0 ? 'block' : 'none';
+    elFavCount.textContent = `${count}`;
+    elFavLink.style.display = count > 0 ? 'block' : 'none';
     console.log(`favs count updated to ${count}`);
 }
 
 function showFavourites() {
-    const overlay = document.getElementById('favOverlay');
-    const grid = document.getElementById('favGrid');
-    grid.innerHTML = '';
+    elFavGrid.innerHTML = '';
 
     for (const key of getFavouriteKeysSorted()) {
         const [id, cardNumber] = parseFavouriteKey(key);
@@ -153,25 +156,25 @@ function showFavourites() {
         cardDiv.appendChild(spinner);
         cardDiv.appendChild(img);
         cardDiv.appendChild(removeBtn);
-        grid.appendChild(cardDiv);
+        elFavGrid.appendChild(cardDiv);
     }
 
-    overlay.style.display = 'flex';
+    elFavOverlay.style.display = 'flex';
 }
 
 function hideFavourites() {
-    document.getElementById('favOverlay').style.display = 'none';
+    elFavOverlay.style.display = 'none';
 }
 
-document.getElementById('newCard').addEventListener('click', loadRandomCard);
-document.getElementById('favourite').addEventListener('click', toggleFavourite);
-document.getElementById('favLink').addEventListener('click', showFavourites);
-document.getElementById('favOverlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('favOverlay')) {
+elNewCardBtn.addEventListener('click', loadRandomCard);
+elFavBtn.addEventListener('click', toggleFavourite);
+elFavLink.addEventListener('click', showFavourites);
+elFavOverlay.addEventListener('click', (e) => {
+    if (e.target === elFavOverlay) {
         hideFavourites();
     }
 });
-document.getElementById('favClose').addEventListener('click', hideFavourites);
+elFavClose.addEventListener('click', hideFavourites);
 
 (async () => {
     await loadCardsData();
