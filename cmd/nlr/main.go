@@ -110,18 +110,19 @@ func countCards(options *countCmd) error {
 	}()
 
 	for id := 1; id <= options.MaxId; id++ {
-		_, ok := cards[id]
-		if !ok {
-			pool.Submit(func() {
-				lastCardNumber, err := nlr.FindLastCardNumberInASmartWay(id)
-				if err != nil {
-					log.Printf("Failed to determine last card number for id %d\n", id)
-					return
-				}
-				log.Printf("Id %d has %d cards.\n", id, lastCardNumber)
-				resultsChan <- resultPair{id, lastCardNumber}
-			})
+		if _, ok := cards[id]; ok {
+			continue
 		}
+
+		pool.Submit(func() {
+			lastCardNumber, err := nlr.FindLastCardNumberInASmartWay(id)
+			if err != nil {
+				log.Printf("Failed to determine last card number for id %d\n", id)
+				return
+			}
+			log.Printf("Id %d has %d cards.\n", id, lastCardNumber)
+			resultsChan <- resultPair{id, lastCardNumber}
+		})
 	}
 
 	pool.StopAndWait()
