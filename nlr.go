@@ -102,29 +102,31 @@ func (nlr *NLR) saveDir(id int) string {
 	return filepath.Join(nlr.OutputDir, strconv.Itoa(thousands), strconv.Itoa(hundreds))
 }
 
-// returns false if there is no such file on the server
-func (nlr *NLR) save(id, cardNumber int, data []byte) (bool, error) {
+func (nlr *NLR) save(id, cardNumber int, data []byte) error {
 	dir := nlr.saveDir(id)
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return false, err
+		return err
 	}
 	filename := fmt.Sprintf("%d-%d.png", id, cardNumber)
 	fullPath := filepath.Join(dir, filename)
 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
-func (nlr *NLR) FetchAndSave(id, cardNumber int) (bool, error) {
+func (nlr *NLR) FetchAndSave(id, cardNumber int) error {
 	data, err := nlr.fetchPng(id, cardNumber)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if len(data) == 0 {
-		return false, nil
+		return errors.New("Card does not exist on the server.")
 	}
-	return nlr.save(id, cardNumber, data)
+	if err := nlr.save(id, cardNumber, data); err != nil {
+		return err
+	}
+	return nil
 }
 
 func findPairForMaxIdSearch(baseId, multFactor int, existsFn func(int) (bool, error)) (left int, right int, err error) {

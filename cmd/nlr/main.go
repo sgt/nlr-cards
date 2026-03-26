@@ -62,8 +62,7 @@ func downloadCards(options *dlCmd) error {
 	for id, cardCount := range cardCounts {
 		for cardNumber := 1; cardNumber <= cardCount; cardNumber++ {
 			pool.Submit(func() {
-				_, err := nlr.FetchAndSave(id, cardNumber)
-				if err != nil {
+				if err := nlr.FetchAndSave(id, cardNumber); err != nil {
 					log.Printf("Failed to download card: %d/%d\n", id, cardNumber)
 				}
 			})
