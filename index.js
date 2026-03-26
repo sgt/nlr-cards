@@ -129,9 +129,20 @@ function showFavourites() {
             loadCard(id, cardNumber);
         };
 
+        const spinner = document.createElement('div');
+        spinner.className = 'favSpinner';
+        
         const img = document.createElement('img');
         img.src = `${BASE_URL}/${id}/${cardNumber}`;
         img.alt = `Card ${id}/${cardNumber}`;
+        
+        spinner.style.display = 'block';
+        img.style.display = 'none';
+        
+        img.onload = function() {
+            spinner.style.display = 'none';
+            img.style.display = 'block';
+        };
 
         const removeBtn = document.createElement('button');
         removeBtn.className = 'favRemove';
@@ -143,6 +154,7 @@ function showFavourites() {
             showFavourites();
         };
 
+        cardDiv.appendChild(spinner);
         cardDiv.appendChild(img);
         cardDiv.appendChild(removeBtn);
         grid.appendChild(cardDiv);
