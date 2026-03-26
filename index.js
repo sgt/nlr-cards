@@ -30,6 +30,21 @@ function loadCard(id, cardNumber) {
     currentId = id;
     currentCardNumber = cardNumber;
     const img = document.getElementById('card');
+    const spinner = document.getElementById('spinner');
+    
+    img.style.display = 'none';
+    spinner.style.display = 'block';
+    
+    img.onload = function() {
+        spinner.style.display = 'none';
+        img.style.display = 'block';
+    };
+    
+    img.onerror = function() {
+        spinner.style.display = 'none';
+        img.alt = `Failed to load card ${currentId}/${currentCardNumber}`;
+    };
+    
     img.src = `${BASE_URL}/${currentId}/${currentCardNumber}`;
     img.alt = `Card ${currentId}/${currentCardNumber}`;
     updateFavouriteButton();
