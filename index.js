@@ -26,27 +26,30 @@ function getRandomCardNumber(id) {
     return randomCN
 }
 
+function setupImageSpinner(img, spinner, failAlt) {
+    spinner.style.display = 'block';
+    img.style.display = 'none';
+
+    img.onload = function () {
+        spinner.style.display = 'none';
+        img.style.display = 'block';
+    };
+
+    img.onerror = function () {
+        spinner.style.display = 'none';
+        img.alt = failAlt;
+    };
+}
+
 function loadCard(id, cardNumber) {
     currentId = id;
     currentCardNumber = cardNumber;
     const img = document.getElementById('card');
     const spinner = document.getElementById('spinner');
-    
-    img.style.display = 'none';
-    spinner.style.display = 'block';
-    
-    img.onload = function() {
-        spinner.style.display = 'none';
-        img.style.display = 'block';
-    };
-    
-    img.onerror = function() {
-        spinner.style.display = 'none';
-        img.alt = `Failed to load card ${currentId}/${currentCardNumber}`;
-    };
-    
+
     img.src = `${BASE_URL}/${currentId}/${currentCardNumber}`;
     img.alt = `Card ${currentId}/${currentCardNumber}`;
+    setupImageSpinner(img, spinner, `Failed to load card ${currentId}/${currentCardNumber}`);
     updateFavouriteButton();
 }
 
@@ -131,18 +134,11 @@ function showFavourites() {
 
         const spinner = document.createElement('div');
         spinner.className = 'favSpinner';
-        
+
         const img = document.createElement('img');
         img.src = `${BASE_URL}/${id}/${cardNumber}`;
         img.alt = `Card ${id}/${cardNumber}`;
-        
-        spinner.style.display = 'block';
-        img.style.display = 'none';
-        
-        img.onload = function() {
-            spinner.style.display = 'none';
-            img.style.display = 'block';
-        };
+        setupImageSpinner(img, spinner, `Failed to load card ${currentId}/${currentCardNumber}`);
 
         const removeBtn = document.createElement('button');
         removeBtn.className = 'favRemove';
